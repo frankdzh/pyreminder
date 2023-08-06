@@ -23,11 +23,6 @@ def send_pushover_messages(token, group, device, message):
     response = requests.post(url, data=data)
     print(f"Sent message to {group}, status: {response.status_code}")
 
-
-# pushover_token = "azt8e3gnx1zdhicdg7kuz9y64mbznn"
-# pushover_group = "gbcw19yoe42yikdsxitetfcwc82557"
-# pushover_device = "yz_iphonexsmax"
-
 # Load the .env file
 load_dotenv()
 
