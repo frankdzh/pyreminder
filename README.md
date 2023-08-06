@@ -2,6 +2,7 @@
 配合 tslamateapi 低电量时使用pushover进行提醒
 
 
-#引用项目
-https://github.com/tobiasehlert/teslamateapi
-https://github.com/adriankumpf/teslamate
+# 感谢项目
+[TeslaMateAPI](https://github.com/tobiasehlert/teslamateapi)
+<br>
+[TeslaMate](https://github.com/adriankumpf/teslamate)
