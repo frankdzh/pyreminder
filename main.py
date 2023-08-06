@@ -47,6 +47,7 @@ battery_level_limit = float(os.getenv("BATTERY_LEVEL_LIMIT", 35))
 geofence = os.getenv("GEOFENCE", "家")
 REMIND_TIMES = list(map(int, os.getenv("REMIND_TIMES", "8,12,20").split(",")))
 
+logging.basicConfig(level=logging.INFO)
 
 last_remind = None  # The time of the last remind
 
@@ -54,6 +55,7 @@ last_remind = None  # The time of the last remind
 remind_done = []
 
 while True:
+
     # Fetch car status
     response = requests.get(URL)
     data = response.json()
@@ -62,6 +64,10 @@ while True:
     driving_details = data["data"]["status"]["driving_details"]
     battery_details = data["data"]["status"]["battery_details"]
     car_geodata = data["data"]["status"]["car_geodata"]
+    
+    now = datetime.datetime.now()
+    timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
+    logging.info(f"{timestamp}: 循环检查电量...")
 
     if (
         driving_details["speed"] <= speed_limit  # 0
@@ -69,7 +75,7 @@ while True:
         and car_geodata["geofence"] == geofence  # "家"
     ):
         # Check if it's time to remind
-        now = datetime.datetime.now()
+        now = datetime.now()
         hour = now.hour
         today = now.date()
         timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
