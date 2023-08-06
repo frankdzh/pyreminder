@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 import logging
 
 
+pushover_enabled = bool(os.getenv("PUSHOVER_ENABLED", "false"))
 def send_pushover_messages(token, group, device, message):
     import requests
 
@@ -20,7 +21,9 @@ def send_pushover_messages(token, group, device, message):
         "message": message,
         "device": device,
     }
-    response = requests.post(url, data=data)
+
+    if (pushover_enabled):
+        response = requests.post(url, data=data)
     print(f"Sent message to {group}, status: {response.status_code}")
 
 # Load the .env file
@@ -49,6 +52,7 @@ last_remind = None  # The time of the last remind
 # Define a list to hold the remind times
 remind_done = []
 
+logging.info(f"启动检查电量 <= {battery_level_limit}%...")
 while True:
 
     # Fetch car status
@@ -62,7 +66,7 @@ while True:
     
     now = datetime.datetime.now()
     timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
-    logging.info(f"{timestamp}: 循环检查电量是否 <= {battery_level_limit}%...")
+    logging.info(f"{timestamp}: 检查-> 当前电量:{battery_details['battery_level']}% <= 报警电量:{battery_level_limit}%, 当前速度:{driving_details['speed']} <= 报警速度:{speed_limit}, 当前位置:{car_geodata['geofence']} == 报警位置:{geofence}...")
 
     if (
         driving_details["speed"] <= speed_limit  # 0
