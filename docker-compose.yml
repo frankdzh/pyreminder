@@ -2,6 +2,8 @@ version: "3"
 services:
   reminder:
     image: pyreminder:latest
+    env_file:
+      - .env
     #ports:
     #  - "4000:80"
 networks:
