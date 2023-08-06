@@ -8,7 +8,13 @@ WORKDIR /app
 ADD . /app
 
 # Install any needed packages specified in requirements.txt
-RUN pip install --trusted-host pypi.python.org requests
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Define environment variable
+ENV MY_ENV_VAR myvalue
+
+# Install any needed packages specified in requirements.txt
+#RUN pip install --trusted-host pypi.python.org requests
 
 # Make port 80 available to the world outside this container
 EXPOSE 80
