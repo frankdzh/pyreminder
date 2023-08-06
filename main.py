@@ -29,7 +29,7 @@ def send_pushover_messages(token, group, device, message):
         #print(f"Sent message to {group}, status: {response.status_code}")
         logging.info(f"Sent message '{message}' to {group}, status: {response.status_code}")
     else:
-        logging.info(f"Not Sent message '{message}' to {group}, status: {response.status_code}")
+        logging.info(f"Not Sent message '{message}' to {group}")
 
 # Load the .env file
 load_dotenv()
@@ -92,12 +92,12 @@ while True:
             hour in REMIND_TIMES and today not in remind_done
         ):
             msg = f"充电提醒，当前电量：{battery_level}%"
-            print(msg)
-            logging.info(msg)
+            #print(msg)
+            logging.info(f"{timestamp}: {msg}")
             send_pushover_messages(pushover_token, pushover_group, pushover_device, msg)
             remind_done.append(today)
         else:
-            print("不需要提醒")
+            #print("不需要提醒")
             logging.info("不需要提醒")
 
     # Sleep until the next check
