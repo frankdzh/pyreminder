@@ -26,7 +26,10 @@ def send_pushover_messages(token, group, device, message):
 
     if (pushover_enabled):
         response = requests.post(url, data=data)
-    print(f"Sent message to {group}, status: {response.status_code}")
+        #print(f"Sent message to {group}, status: {response.status_code}")
+        logging.info(f"Sent message '{message}' to {group}, status: {response.status_code}")
+    else:
+        logging.info(f"Not Sent message '{message}' to {group}, status: {response.status_code}")
 
 # Load the .env file
 load_dotenv()
