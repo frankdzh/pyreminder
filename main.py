@@ -74,7 +74,7 @@ while True:
         and car_geodata["geofence"] == geofence  # "家"
     ):
         # Check if it's time to remind
-        now = datetime.now()
+        now = datetime.datetime.now()
         hour = now.hour
         today = now.date()
         timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
