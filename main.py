@@ -3,6 +3,7 @@ import time
 import datetime
 import os
 from dotenv import load_dotenv
+import logging
 
 
 def send_pushover_messages(token, group, device, message):
@@ -75,16 +76,19 @@ while True:
         battery_level = battery_details["battery_level"]
 
         print(f"{timestamp}: 条件满足，检查是否需要发出提醒...", end="")
+        logging.info(f"{timestamp}: 条件满足，检查是否需要发出提醒...")
 
         if (today not in remind_done) or (
             hour in REMIND_TIMES and today not in remind_done
         ):
             msg = f"充电提醒，当前电量：{battery_level}%"
             print(msg)
+            logging.info(msg)
             send_pushover_messages(pushover_token, pushover_group, pushover_device, msg)
             remind_done.append(today)
         else:
             print("不需要提醒")
+            logging.info("不需要提醒")
 
     # Sleep until the next check
     time.sleep(check_interval)
