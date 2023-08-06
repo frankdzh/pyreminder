@@ -6,7 +6,9 @@ from dotenv import load_dotenv
 import logging
 
 
-pushover_enabled = bool(os.getenv("PUSHOVER_ENABLED", "false"))
+pushover_enabled = os.getenv("PUSHOVER_ENABLED", "false")
+pushover_enabled = pushover_enabled.lower() == "true"
+
 def send_pushover_messages(token, group, device, message):
     import requests
 
