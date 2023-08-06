@@ -67,7 +67,7 @@ while True:
     
     now = datetime.datetime.now()
     timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
-    logging.info(f"{timestamp}: 循环检查电量...")
+    logging.info(f"{timestamp}: 循环检查电量是否 <= {battery_level_limit}%...")
 
     if (
         driving_details["speed"] <= speed_limit  # 0
