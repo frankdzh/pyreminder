@@ -9,6 +9,11 @@ import logging
 pushover_enabled = os.getenv("PUSHOVER_ENABLED", "false")
 pushover_enabled = pushover_enabled.lower() == "true"
 
+def get_timestamp():
+    now = datetime.datetime.now()
+    timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
+    return timestamp
+
 def send_pushover_messages(token, group, device, message):
     import requests
 
@@ -23,13 +28,13 @@ def send_pushover_messages(token, group, device, message):
         "message": message,
         "device": device,
     }
-
+    timestamp = get_timestamp()
     if (pushover_enabled):
         response = requests.post(url, data=data)
         #print(f"Sent message to {group}, status: {response.status_code}")
-        logging.info(f"Sent message '{message}' to {group}, status: {response.status_code}")
+        logging.info(f"{timestamp}:Sent message '{message}' to {group}, status: {response.status_code}")
     else:
-        logging.info(f"Not Sent message '{message}' to {group}")
+        logging.info(f"{timestamp}:Not Sent message '{message}' to {group}")
 
 # Load the .env file
 load_dotenv()
@@ -56,6 +61,8 @@ last_remind = None  # The time of the last remind
 
 # Define a list to hold the remind times
 remind_done = []
+remind_time_done = []
+last_date = datetime.datetime.now().date() - datetime.timedelta(days=1)
 
 logging.info(f"启动检查电量 <= {battery_level_limit}%...")
 while True:
@@ -67,10 +74,9 @@ while True:
     # Check the conditions
     driving_details = data["data"]["status"]["driving_details"]
     battery_details = data["data"]["status"]["battery_details"]
-    car_geodata = data["data"]["status"]["car_geodata"]
+    car_geodata = data["data"]["status"]["car_geodata"]    
     
-    now = datetime.datetime.now()
-    timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
+    timestamp = get_timestamp()
     logging.info(f"{timestamp}: 检查-> 当前电量:{battery_details['battery_level']}% <= 报警电量:{battery_level_limit}%, 当前速度:{driving_details['speed']} <= 报警速度:{speed_limit}, 当前位置:{car_geodata['geofence']} == 报警位置:{geofence}...")
 
     if (
@@ -85,17 +91,26 @@ while True:
         timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
         battery_level = battery_details["battery_level"]
 
+        if (last_date != today):
+            remind_done = []
+            remind_time_done = []
+            last_date = today
+
         print(f"{timestamp}: 条件满足，检查是否需要发出提醒...", end="")
         logging.info(f"{timestamp}: 条件满足，检查是否需要发出提醒...")
 
         if (today not in remind_done) or (
-            hour in REMIND_TIMES and today not in remind_done
+            hour in REMIND_TIMES and hour not in remind_time_done
         ):
             msg = f"充电提醒，当前电量：{battery_level}%"
             #print(msg)
             logging.info(f"{timestamp}: {msg}")
             send_pushover_messages(pushover_token, pushover_group, pushover_device, msg)
-            remind_done.append(today)
+            
+            if (today not in remind_done):
+                remind_done.append(today)
+            if (hour in REMIND_TIMES):
+                remind_time_done.append(hour)
         else:
             #print("不需要提醒")
             logging.info("不需要提醒")
