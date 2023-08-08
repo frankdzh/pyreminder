@@ -80,7 +80,7 @@ def check_car_status_and_send_reminders(
             return "跨越边界提醒已发送"
 
         if bPeriodic_reminder:
-            msg = f"定期充电提醒，当前电量：{current_battery}%"
+            msg = f"定期充电提醒，当前电量：{current_battery}% < {battery_level_limit}"
             logging.info(f"{get_timestamp()}: {msg}")
             send_pushover_messages(pushover_token, pushover_user, pushover_device, msg)
             remind_time_done.append(hour)
