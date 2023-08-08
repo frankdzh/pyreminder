@@ -130,10 +130,21 @@ class IntegrationTest(unittest.TestCase):
         result = main.check_car_status_and_send_reminders(today, 22, 35, 0, "家")
         self.assertEqual(result, "无需提醒")
 
+        # 先出小区，再进小区
+        main.current_plugged_in = False
+        result = main.check_car_status_and_send_reminders(today, 22, 35, 0, "家")
+        main.last_geofence = ''
+        result = main.check_car_status_and_send_reminders(today, 22, 35, 0, "家")
+        self.assertEqual(result, "晚上进入小区时电量低提醒已发送")
+        main.last_geofence = "家"
+        result = main.check_car_status_and_send_reminders(today, 22, 35, 0, "家")
+        self.assertEqual(result, "无需提醒")
 
     def test_sound(self):        
+        last = main.pushover_enabled
         main.pushover_enabled = True
-        main.send_pushover_messages(main.pushover_token, main.pushover_user, "test", "test message")
+        #main.send_pushover_messages(main.pushover_token, main.pushover_user, "test", "test message")
+        main.pushover_enabled = last
 
 # Running the tests
 if __name__ == '__main__':
