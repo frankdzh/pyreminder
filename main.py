@@ -82,21 +82,21 @@ def check_car_status_and_send_reminders(
         bTriggerEnterHome = hour >= remind_enter_geofence and last_geofence != car_geofence_limit
         
         if bTriggerOnce:
-            msg = f"跨越边界提醒，当前电量：{current_battery}% < 报警电量: {battery_level_limit}"
+            msg = f"跨越边界提醒，当前电量：{current_battery}% < 报警电量: {battery_level_limit}%"
             logging.info(f"{get_timestamp()}: {msg}")
             send_pushover_messages(pushover_token, pushover_user, pushover_device, msg)
             battery_alarm_triggered = True
             return "跨越边界提醒已发送"
 
         if bPeriodic_reminder:
-            msg = f"定期充电提醒，当前电量：{current_battery}% < 报警电量: {battery_level_limit}"
+            msg = f"定期充电提醒，当前电量：{current_battery}% < 报警电量: {battery_level_limit}%"
             logging.info(f"{get_timestamp()}: {msg}")
             send_pushover_messages(pushover_token, pushover_user, pushover_device, msg)
             remind_time_done.append(hour)
             return "定期充电提醒已发送"
         
         if (bTriggerEnterHome):
-            msg = f"进小区电量低充电提醒，当前电量：{current_battery}% < 报警电量: {battery_level_limit}"
+            msg = f"进小区电量低充电提醒，当前电量：{current_battery}% < 报警电量: {battery_level_limit}%"
             logging.info(f"{get_timestamp()}: {msg}")
             send_pushover_messages(pushover_token, pushover_user, pushover_device, msg)
             #last_manytime_trigger_time = datetime.datetime.now()
