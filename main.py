@@ -44,6 +44,7 @@ def send_pushover_messages(token, user, device, message):
             "user": user,
             "message": message,
             "device": device,
+            "sound": "pushover",
         }
         response = requests.post(url, data=data)
         #print(f"Sent message to {group}, status: {response.status_code}")

@@ -131,6 +131,10 @@ class IntegrationTest(unittest.TestCase):
         self.assertEqual(result, "无需提醒")
 
 
+    def test_sound(self):        
+        main.pushover_enabled = True
+        main.send_pushover_messages(main.pushover_token, main.pushover_user, "test", "test message")
+
 # Running the tests
 if __name__ == '__main__':
     unittest.main()
