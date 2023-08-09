@@ -78,8 +78,11 @@ class IntegrationTest(unittest.TestCase):
         result = main.check_car_status_and_send_reminders(today, 0, 30, 0, "家")
         self.assertEqual(result, "无需提醒")
 
-    @responses.activate
+    #@responses.activate
     def test_scheduled_reminders(self):
+        self.test_reminders()
+
+    def test_reminders(self):
         logging.getLogger().setLevel(logging.WARN)
         # Mocking the API response for the car status
         #responses.add(responses.GET, main.URL,
@@ -89,6 +92,8 @@ class IntegrationTest(unittest.TestCase):
         now = datetime.datetime.now()
         today = now.date()
         main.last_battery = 35        
+        main.current_plugged_in = False
+        main.remind_time_done = []
         # Mocking the datetime to be at one of the remind times
         # ...
         main.battery_alarm_triggered = True
@@ -130,6 +135,11 @@ class IntegrationTest(unittest.TestCase):
         result = main.check_car_status_and_send_reminders(today, 22, 35, 0, "家")
         self.assertEqual(result, "无需提醒")
 
+
+    def test_plugin(self):
+        now = datetime.datetime.now()
+        today = now.date()
+        main.remind_time_done = []
         # 先出小区，再进小区
         main.current_plugged_in = False
         result = main.check_car_status_and_send_reminders(today, 22, 35, 0, "家")

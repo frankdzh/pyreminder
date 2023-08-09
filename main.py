@@ -133,4 +133,5 @@ def main():
         last_geofence = current_cargeo
         time.sleep(check_interval)
 
-main()
+if __name__ == "__main__":
+    main()
