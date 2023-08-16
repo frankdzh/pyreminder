@@ -18,7 +18,7 @@ class IntegrationTest(unittest.TestCase):
 
     @responses.activate
     def test_battery_boundary_reminder(self):
-        logging.getLogger().setLevel(logging.WARN)
+        #logging.getLogger().setLevel(logging.WARN)
         # Mocking the API response for the car status
         #responses.add(responses.GET, main.URL,
         #              json={"data": {"status": {"battery_details": {"battery_level": 30},
@@ -134,7 +134,32 @@ class IntegrationTest(unittest.TestCase):
         self.assertEqual(result, "无需提醒")
         result = main.check_car_status_and_send_reminders(today, 22, 35, 0, "家")
         self.assertEqual(result, "无需提醒")
-
+    
+    def test_EnterOuterHome(self):
+        now = datetime.datetime.now()
+        today = now.date()
+        main.remind_time_done = []
+        # 先出小区，再进小区
+        main.current_plugged_in = False
+        main.last_geofence = "家"
+        result = main.check_car_status_and_send_reminders(today, 21, 35, 30, '')
+        main.last_geofence = ''
+        result = main.check_car_status_and_send_reminders(today, 21, 35, 30, "家")
+        main.last_geofence = "家"
+        result = main.check_car_status_and_send_reminders(today, 21, 35, 0, "家")
+        self.assertEqual(result, "晚上进入小区时电量低提醒已发送")
+        main.last_geofence = "家"
+        result = main.check_car_status_and_send_reminders(today, 21, 35, 0, "家")
+        self.assertEqual(result, "无需提醒")
+        #在外面跑
+        main.last_geofence = ""
+        result = main.check_car_status_and_send_reminders(today, 11, 35, 50, "")
+        self.assertEqual(result, "无需提醒")
+        result = main.check_car_status_and_send_reminders(today, 11, 35, 0, "")
+        self.assertEqual(result, "无需提醒")
+        result = main.check_car_status_and_send_reminders(today, 11, 35, 40, "")
+        self.assertEqual(result, "无需提醒")
+        
 
     def test_plugin(self):
         now = datetime.datetime.now()
@@ -158,4 +183,5 @@ class IntegrationTest(unittest.TestCase):
 
 # Running the tests
 if __name__ == '__main__':
+    logging.getLogger().setLevel(logging.WARN)
     unittest.main()

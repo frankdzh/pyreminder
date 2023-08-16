@@ -30,6 +30,7 @@ current_plugged_in = False
 
 remind_enter_geofence = int(os.getenv("REMIND_ENTER_GEOFENCE", 20))
 last_geofence = car_geofence_limit
+is_enter_home = False
 
 def get_timestamp():
     now = datetime.datetime.now()
@@ -59,7 +60,14 @@ def send_pushover_messages(token, user, device, message):
 def check_car_status_and_send_reminders(
     today, hour, current_battery, current_speed, current_cargeo
 ):
-    global last_date, battery_alarm_triggered, remind_time_done, last_battery, last_geofence
+    global last_date, battery_alarm_triggered, remind_time_done, last_battery, last_geofence, is_enter_home
+    # 记录出入小区标记，只在进出小区时触发一次
+    if (last_geofence != current_cargeo):
+        if (last_geofence == car_geofence_limit):
+            is_enter_home = False #出小区了，解除
+        else:
+            is_enter_home = True
+    
     if (
         current_speed <= speed_limit  # 0
         and current_battery <= battery_level_limit  # 35
@@ -79,27 +87,28 @@ def check_car_status_and_send_reminders(
         bPeriodic_reminder = hour in REMIND_TIMES and hour not in remind_time_done
         #只要电量低并且在家，并且距离上次提醒超过5分钟
         #bTriggerManyTimes = hour >= remind_manytime and datetime.datetime.now() >= (last_manytime_trigger_time + datetime.timedelta(seconds=repeat_warning_interval))
-        bTriggerEnterHome = hour >= remind_enter_geofence and last_geofence != car_geofence_limit
+        bTriggerEnterHome = hour >= remind_enter_geofence and is_enter_home # and last_geofence != car_geofence_limit #如果进小区时，速度超过speed_limt，这里永远都不会报警
         
         if bTriggerOnce:
-            msg = f"跨越边界提醒，当前电量：{current_battery}% < 报警电量: {battery_level_limit}%"
+            msg = f"跨越边界提醒，当前电量：{current_battery}% <= 报警电量: {battery_level_limit}%"
             logging.info(f"{get_timestamp()}: {msg}")
             send_pushover_messages(pushover_token, pushover_user, pushover_device, msg)
             battery_alarm_triggered = True
             return "跨越边界提醒已发送"
 
         if bPeriodic_reminder:
-            msg = f"定期充电提醒，当前电量：{current_battery}% < 报警电量: {battery_level_limit}%"
+            msg = f"定期充电提醒，当前电量：{current_battery}% <= 报警电量: {battery_level_limit}%"
             logging.info(f"{get_timestamp()}: {msg}")
             send_pushover_messages(pushover_token, pushover_user, pushover_device, msg)
             remind_time_done.append(hour)
             return "定期充电提醒已发送"
         
         if (bTriggerEnterHome):
-            msg = f"进小区电量低充电提醒，当前电量：{current_battery}% < 报警电量: {battery_level_limit}%"
+            msg = f"进小区电量低充电提醒，当前电量：{current_battery}% <= 报警电量: {battery_level_limit}%"
             logging.info(f"{get_timestamp()}: {msg}")
             send_pushover_messages(pushover_token, pushover_user, pushover_device, msg)
             #last_manytime_trigger_time = datetime.datetime.now()
+            is_enter_home = False
             return "晚上进入小区时电量低提醒已发送"
     
         if (current_battery > battery_level_limit):
