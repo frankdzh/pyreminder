@@ -4,6 +4,10 @@ services:
     image: pyreminder:latest
     env_file:
       - .env
+    volumes:
+      - /etc/timezone:/etc/timezone
+      - /etc/localtime:/etc/localtime
+    restart: always
     #ports:
     #  - "4000:80"
 networks:
