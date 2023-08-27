@@ -192,6 +192,7 @@ class CarReminder:
         """
         # 每次当车辆首次进入家的地理范围时，需要停车时提醒
         if self.remind_enterhome and self.is_car_parked(car_status):
+            self.remind_enterhome = False #提醒过了，就不用再提醒，除非再次出小区
             return True, "进入小区低电量提醒"
 
         # 根据配置定期提醒
