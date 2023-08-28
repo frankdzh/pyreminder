@@ -14,7 +14,7 @@ class IntegrationTest(unittest.TestCase):
         #os.environ['BATTERY_LEVEL_LIMIT'] = '30'
         #os.environ['REMIND_TIMES'] = '10,12'
         # ... set other environment variables as needed
-        os.environ['REMIND_TIMES111'] = '10,12'
+        os.environ['REMIND_TIMES111'] = '1,12'
 
     @responses.activate
     def test_battery_boundary_reminder(self):
@@ -146,9 +146,11 @@ class IntegrationTest(unittest.TestCase):
         main.last_geofence = ''
         result = main.check_car_status_and_send_reminders(today, 21, 35, 30, "家")
         main.last_geofence = "家"
+        main.current_doors_open = True
         result = main.check_car_status_and_send_reminders(today, 21, 35, 0, "家")
         self.assertEqual(result, "晚上进入小区时电量低提醒已发送")
         main.last_geofence = "家"
+        main.current_doors_open = False
         result = main.check_car_status_and_send_reminders(today, 21, 35, 0, "家")
         self.assertEqual(result, "无需提醒")
         #在外面跑
@@ -169,6 +171,7 @@ class IntegrationTest(unittest.TestCase):
         main.current_plugged_in = False
         result = main.check_car_status_and_send_reminders(today, 22, 35, 0, "家")
         main.last_geofence = ''
+        main.current_doors_open = True
         result = main.check_car_status_and_send_reminders(today, 22, 35, 0, "家")
         self.assertEqual(result, "晚上进入小区时电量低提醒已发送")
         main.last_geofence = "家"
@@ -180,6 +183,53 @@ class IntegrationTest(unittest.TestCase):
         main.pushover_enabled = True
         #main.send_pushover_messages(main.pushover_token, main.pushover_user, "test", "test message")
         main.pushover_enabled = last
+
+    def test_IntervalChanged(self):
+        now = datetime.datetime.now()
+        today = now.date()
+        main.remind_time_done = []
+        # 先出小区，再进小区
+        main.current_plugged_in = False
+        main.last_geofence = ''
+        result = main.check_car_status_and_send_reminders(today, 21, 35, 30, "家")
+        main.last_geofence = "家"
+        # 走几轮空的
+        result = main.check_car_status_and_send_reminders(today, 21, 35, 30, "家")
+        result = main.check_car_status_and_send_reminders(today, 21, 35, 30, "家")
+        result = main.check_car_status_and_send_reminders(today, 21, 35, 30, "家")
+        self.assertEqual(main.check_interval, 1)
+        #插电后，轮询间隔恢复
+        main.current_plugged_in = True
+        result = main.check_car_status_and_send_reminders(today, 21, 35, 30, "家")
+        self.assertEqual(main.check_interval, 3)
+
+        #刚进小区，但是不到警告标准，把轮询时间设置为1
+        main.current_plugged_in = False
+        main.last_geofence = ''
+        result = main.check_car_status_and_send_reminders(today, 21, 35, 15, "家")
+        self.assertEqual(main.check_interval, 1)
+
+        #刚进小区，但是不到警告标准，把轮询时间设置为1
+        main.last_geofence = ''
+        result = main.check_car_status_and_send_reminders(today, 21, 45, 30, "家")
+        self.assertEqual(main.check_interval, 1)
+        #到警告标准了，发送警告并且间隔恢复
+        main.current_doors_open = True
+        result = main.check_car_status_and_send_reminders(today, 21, 35, 3, "家")
+        self.assertEqual(main.check_interval, 3)
+        self.assertEqual(result, "晚上进入小区时电量低提醒已发送")
+
+        #刚进小区，但是不到警告标准（时间、地点、速度），把轮询时间设置为1，本轮不报警
+        main.last_geofence = ''
+        result = main.check_car_status_and_send_reminders(today, 21, 45, 30, "家")
+        self.assertEqual(result, "无需提醒")
+        #已经在家里，速度、电量、位置符合检查条件，但是没有报过进入小区的警告，需要报警
+        main.last_geofence = '家'
+        result = main.check_car_status_and_send_reminders(today, 21, 35, 3, "家")
+        self.assertEqual(result, "晚上进入小区时电量低提醒已发送")
+        self.assertEqual(main.check_interval, 3)
+        result = main.check_car_status_and_send_reminders(today, 21, 35, 3, "家")
+        self.assertEqual(result, "无需提醒")
 
 # Running the tests
 if __name__ == '__main__':

@@ -27,17 +27,32 @@ battery_alarm_triggered = False  # 只在跨越临界值时通知一次
 last_battery = 0
 last_date = datetime.datetime.now().date() - datetime.timedelta(days=1)
 current_plugged_in = False
+current_doors_open = False
+current_shift_state = ""
 
 remind_enter_geofence = int(os.getenv("REMIND_ENTER_GEOFENCE", 20))
 last_geofence = car_geofence_limit
 is_enter_home = False
+#old_interver = check_interval;
 
 def get_timestamp():
     now = datetime.datetime.now()
     timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
     return timestamp
 
+def reset_check_interval():
+    global check_interval
+    check_interval = float(os.getenv("CHECK_INTERVAL", 60))
+    return check_interval
+
+def set_check_interval(new_interval):
+    global check_interval
+    check_interval = new_interval
+    return check_interval
+
+
 def send_pushover_messages(token, user, device, message):
+    reset_check_interval() #发消息就重置
     if (pushover_enabled):
         # Pushover API url
         url = "https://api.pushover.net/1/messages.json"
@@ -64,10 +79,18 @@ def check_car_status_and_send_reminders(
     # 记录出入小区标记，只在进出小区时触发一次
     if (last_geofence != current_cargeo):
         if (last_geofence == car_geofence_limit):
-            is_enter_home = False #出小区了，解除
+            is_enter_home = False #自从上次离开了小区后，触发过一次进小区了，解除
         else:
             is_enter_home = True
     
+    if (is_enter_home):        
+        set_check_interval(1) #临时设置为1秒，发送消息后重置
+    else:
+        reset_check_interval()
+    
+    if(current_plugged_in):
+        reset_check_interval()
+
     if (
         current_speed <= speed_limit  # 0
         and current_battery <= battery_level_limit  # 35
@@ -87,7 +110,7 @@ def check_car_status_and_send_reminders(
         bPeriodic_reminder = hour in REMIND_TIMES and hour not in remind_time_done
         #只要电量低并且在家，并且距离上次提醒超过5分钟
         #bTriggerManyTimes = hour >= remind_manytime and datetime.datetime.now() >= (last_manytime_trigger_time + datetime.timedelta(seconds=repeat_warning_interval))
-        bTriggerEnterHome = hour >= remind_enter_geofence and is_enter_home # and last_geofence != car_geofence_limit #如果进小区时，速度超过speed_limt，这里永远都不会报警
+        bTriggerEnterHome = hour >= remind_enter_geofence and is_enter_home and current_doors_open# and last_geofence != car_geofence_limit #如果进小区时，速度超过speed_limt，这里永远都不会报警
         
         if bTriggerOnce:
             msg = f"跨越边界提醒，当前电量：{current_battery}% <= 报警电量: {battery_level_limit}%"
@@ -117,7 +140,7 @@ def check_car_status_and_send_reminders(
 
 def main():
     # Main loop (will be executed in the actual environment)
-    global last_battery, current_plugged_in, last_geofence
+    global last_battery, current_plugged_in, last_geofence, current_doors_open, current_shift_state
 
     while True:
         response = requests.get(URL)
@@ -128,6 +151,8 @@ def main():
         current_battery = data["data"]["status"]["battery_details"]["battery_level"]
         current_speed = data["data"]["status"]["driving_details"]["speed"]
         current_cargeo = data["data"]["status"]["car_geodata"]['geofence']
+        current_doors_open = data["data"]["status"]["car_status"]['doors_open'] #需要验证能否获取
+        current_shift_state = data["data"]["status"]["driving_details"]["shift_state"] #需要验证能否获取以及获取的内容是什么
         #"charging_details": {"plugged_in": true,}
 
         logging.info(
