@@ -5,6 +5,15 @@ import logging
 # Import your CarReminder class here
 from refactored_main import CarReminder
 
+class MyTestRunner(unittest.TextTestRunner):
+    def __init__(self, *args, **kwargs):
+        super(MyTestRunner, self).__init__(*args, **kwargs)
+        self.fail_count = 0
+
+    def addFailure(self, test, err):
+        self.fail_count += 1
+        super(MyTestRunner, self).addFailure(test, err)
+
 class TestCarReminder(unittest.TestCase):
     
     def setUp(self):
@@ -56,7 +65,6 @@ class TestCarReminder(unittest.TestCase):
             'heading': 'data.status.driving_details.heading',
         }
 
-
         test_cases = [
             #先出小区，在进小区 0-5
             {'plugged_in': False, 'date': 1, 'hour': 11, 'battery_level': 19, 'speed': 0, 'geofence': '家', 'heading': 182, 'expected1': False, 'expected2': ''},
@@ -79,10 +87,35 @@ class TestCarReminder(unittest.TestCase):
             {'battery_level': 2},
             {'geofence': ''},
             {'heading': ''},
-            # 条件满足时
+            # 条件满足时 18-20
             {'plugged_in': False, 'date': 1, 'hour': 11, 'battery_level': 39, 'speed': 0, 'geofence': '', 'heading': 182, 'expected1': False, 'expected2': ''},
-            {'geofence': '家', 'expected1': True, 'expected2': '进入小区低电量提醒'},
+            {'geofence': '家', 'battery_level': 30, 'expected1': True, 'expected2': '进入小区低电量提醒'},
             {'hour': 12, 'expected1': True, 'expected2': '定期充电提醒'},
+            # 检查间隔自动调整 21-31
+            {'plugged_in': False, 'date': 1, 'hour': 11, 'battery_level': 19, 'speed': 30, 'geofence': '', 'heading': 182, 'expected1': False, 'expected2': ''},
+            {'geofence': '', 'speed': 0, 'expected1': False, 'expected2': ''},
+            {'geofence': '', 'speed': 30, 'expected1': False, 'expected2': ''},
+            {'geofence': '', 'geofence': '', 'expected1': False, 'expected2': ''},
+            {'geofence': '家', 'expected1': False, 'expected2': ''},
+            {'geofence': '家', 'expected1': False, 'expected2': ''},
+            {'geofence': '家', 'expected1': False, 'expected2': ''},
+            {'geofence': '家', 'speed': 0, 'expected1': True, 'expected2': '进入小区低电量提醒'},
+            {'geofence': '家', 'expected1': False, 'expected2': ''},
+            {'geofence': '', 'expected1': False, 'expected2': ''},
+            {'geofence': '家', 'expected1': True, 'expected2': '进入小区低电量提醒'},
+            # 检查间隔自动调整 32-42
+            {'plugged_in': False, 'date': 1, 'hour': 11, 'battery_level': 19, 'speed': 0, 'geofence': '家', 'heading': 182, 'expected1': False, 'expected2': ''},
+            {'geofence': '家', 'speed': 30, 'expected1': False, 'expected2': ''},
+            {'geofence': '', 'geofence': '', 'speed': 40, 'expected1': False, 'expected2': ''},
+            {'geofence': '', 'expected1': False, 'expected2': ''},
+            {'geofence': '家', 'expected1': False, 'expected2': ''},
+            {'geofence': '家', 'expected1': False, 'expected2': ''},
+            {'geofence': '家', 'speed': 0, 'expected1': True, 'expected2': '进入小区低电量提醒'},
+            {'geofence': '家', 'expected1': False, 'expected2': ''},
+            {'geofence': '', 'speed': 50, 'expected1': False, 'expected2': ''},
+            {'geofence': '', 'speed': 50, 'expected1': False, 'expected2': ''},
+            {'geofence': '家', 'speed': 0, 'expected1': True, 'expected2': '进入小区低电量提醒'},
+
         ]
         
         current_case = {}
@@ -102,23 +135,33 @@ class TestCarReminder(unittest.TestCase):
                                 self.set_nested_dict_value(car_status, full_path, value)
                 
                 # ... 进行测试
-                if i == 15:
+                if i == 19:
                     test = True
+                    #logging.warning(f'{i}...')
                 self.car_reminder.check_date_crossing(self.current_date)
                 self.car_reminder.check_car_enterhome(car_status["data"]["status"]["car_geodata"]['geofence'])
-                result1, result2 = self.car_reminder.should_remind_to_charge(car_status)
+                result1, result2 = self.car_reminder.remind_to_charge_if_needed(car_status)
                 try:
                     self.assertEqual(result1, current_case['expected1'])
-                    self.assertEqual(result2, current_case['expected2'])                    
+                    self.assertEqual(result2, current_case['expected2'])
+
+                    #logging.warning(f"{i}# self.check_interval={self.car_reminder.check_interval}")
+                    if (self.car_reminder.check_interval == 1):
+                        print("-", end="")
+                    else:
+                        print("+", end="")
                 except AssertionError:
                     logging.error(f"Test case {i}# failed: result1={result1}, result2={result2}, testcase= {current_case}")
                     raise  # 重新抛出断言错误，以便测试结果能反映这个失败
-
-
+        print()
+        logging.warning(f"Ran {len(test_cases)} Test cases, Total failed tests: {runner.fail_count}\r\n")
         # Verify that the mocked methods were called
         #mock_get_car_status.assert_called()
         #mock_check_date_crossing.assert_called_with("2023-08-28")
 
 if __name__ == "__main__":
     logging.getLogger().setLevel(logging.WARN)
-    unittest.main()
+    #logging.getLogger().setLevel(logging.INFO)
+
+    runner = MyTestRunner()#verbosity=2)
+    unittest.main(testRunner=runner)
