@@ -12,8 +12,6 @@ import logging
 
 class CarReminder:
     def __init__(self):
-        logging.basicConfig(level=logging.INFO)
-
         # Load environment variables from .env file
         load_dotenv()
         
@@ -46,7 +44,7 @@ class CarReminder:
     def init_logger(self):
         # 创建Logger对象
         logger = logging.getLogger()
-        logger.setLevel(logging.INFO)
+        #logger.setLevel(logging.INFO)
 
         # 创建StreamHandler并设置日志级别
         stream_handler = logging.StreamHandler()
@@ -70,11 +68,11 @@ class CarReminder:
         if self.prev_state['car_position'] != current_position:
             # Initialize your variables here            
             if self.prev_state['car_position'] == self.car_geofence_limit:
-                logging.info("触发过一次进小区了，解除提醒")
+                #logging.info("触发过一次进小区了，解除提醒")
                 bret = False
                 self.remind_enterhome = False
             else:
-                logging.info("首次进入小区，设置提醒")
+                #logging.info("首次进入小区，设置提醒")
                 self.remind_enterhome = True
                 
         self.prev_state['car_position'] = current_position
@@ -201,7 +199,7 @@ class CarReminder:
                 self.remind_time_done.append(self.current_hour)
                 return True, "定期充电提醒"
 
-        return False
+        return False, ""
 
     def remind_to_charge_if_needed(self, car_status, msghead):
         """
@@ -240,5 +238,7 @@ class CarReminder:
             time.sleep(self.check_interval)
 
 # Initialize the class with dummy values for demonstration
-car_reminder = CarReminder()
-car_reminder.run()  # Please note that this is a blocking call and for demonstration, it will run indefinitely.
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
+    car_reminder = CarReminder()
+    car_reminder.run()
