@@ -3,7 +3,7 @@ from unittest.mock import Mock, patch
 import logging
 
 # Import your CarReminder class here
-from refactored_main import CarReminder
+from main import CarReminder
 
 class MyTestRunner(unittest.TextTestRunner):
     def __init__(self, *args, **kwargs):
