@@ -62,10 +62,10 @@ class CarReminder:
         self.remind_enterhome = bSet
         if bSet:
             self.check_interval = 1
-            #logging.warning(f"self.check_interval={self.check_interval}")
+            logging.warning(f"进小区了，加快检测，检测间隔={self.check_interval}")
         else:                
             self.check_interval = float(os.getenv("CHECK_INTERVAL", 60))
-            #logging.warning(f"self.check_interval={self.check_interval}")
+            logging.warning(f"恢复正常，检测间隔={self.check_interval}")
 
     # Method to check if car's position has entered 'Home'
     def check_car_enterhome(self, current_position):
