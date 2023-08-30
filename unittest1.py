@@ -148,7 +148,7 @@ class TestCarReminder(unittest.TestCase):
         current_case = {}
         for plugin_i in (1, 2):
             print()
-            logging.warning(f"test loop {plugin_i} Start...")
+            logging.debug(f"test loop {plugin_i} Start...")
             for i, test_case in enumerate(test_cases):
                 with self.subTest(i=i):                
                     car_status = {}
@@ -186,13 +186,13 @@ class TestCarReminder(unittest.TestCase):
                         else:
                             print("+", end="")
                     except AssertionError:
-                        logging.error(f"\r\nTest case loop:{plugin_i}[{i}#] failed: result1={bShouldRemind}, result2={msghead}, testcase= {current_case}")
+                        logging.debug(f"\r\nTest case loop:{plugin_i}[{i}#] failed: result1={bShouldRemind}, result2={msghead}, testcase= {current_case}")
                         raise  # 重新抛出断言错误，以便测试结果能反映这个失败            
             print()
-            logging.warning(f"test loop {plugin_i} End")
+            logging.debug(f"test loop {plugin_i} End")
         ##
         print()
-        logging.warning(f"Ran {len(test_cases)} Test cases\r\n")#, Total failed tests: {runner.resultclass.fail_count}\r\n")
+        logging.debug(f"Ran {len(test_cases)} Test cases\r\n")#, Total failed tests: {runner.resultclass.fail_count}\r\n")
         # Verify that the mocked methods were called
         #mock_get_car_status.assert_called()
         #mock_check_date_crossing.assert_called_with("2023-08-28")
