@@ -26,8 +26,8 @@ class CarReminder:
         self.remind_times = [int(x) for x in os.getenv("REMIND_TIMES").split(",")]
         self.car_geofence_limit = os.getenv("CAR_GEOFENCE", "家")
 
-        self.check_interval = float(os.getenv("CHECK_INTERVAL", 60))
-        self.log_interval = float(os.getenv("LOG_INTERVAL", 60))
+        self.check_interval = int(os.getenv("CHECK_INTERVAL", 60))
+        self.log_interval = int(os.getenv("LOG_INTERVAL", 60))
         
         #self.last_reminded_time = None  # To track the last time a reminder was sent        
         self.remind_time_done = []
@@ -58,14 +58,17 @@ class CarReminder:
         
         self.logger = logger
 
-    def set_remind_enterhome(self, bSet):
-        self.remind_enterhome = bSet
-        if bSet:
+    def reset_check_interval(self, bSet):
+        if bSet: #恢复间隔
+            self.check_interval = int(os.getenv("CHECK_INTERVAL", 60))
+            logging.info(f"{self.get_timestamp()}: 恢复正常，检测间隔={self.check_interval}")
+        else:                
             self.check_interval = 1
             logging.info(f"{self.get_timestamp()}: 进小区了，加快检测，检测间隔={self.check_interval}")
-        else:                
-            self.check_interval = float(os.getenv("CHECK_INTERVAL", 60))
-            logging.info(f"{self.get_timestamp()}: 恢复正常，检测间隔={self.check_interval}")
+
+    def set_remind_enterhome(self, bSet):
+        self.remind_enterhome = bSet
+        self.reset_check_interval(not bSet)
 
     # Method to check if car's position has entered 'Home'
     def check_car_enterhome(self, current_position):
@@ -217,7 +220,7 @@ class CarReminder:
         msghead = ''
         if self.is_car_low_battery_level(car_status):
             if self.is_car_at_home(car_status):
-                if not self.is_car_charging(car_status):        
+                if not self.is_car_charging(car_status):
                     bShouldRemind, msghead = self.should_remind_to_charge(car_status)
                     if bShouldRemind:
                         current_battery = car_status["data"]["status"]["battery_details"]["battery_level"]
@@ -226,6 +229,9 @@ class CarReminder:
                         #进入小区提醒至少提醒一次，除非没提醒就再次出小区了
                         if msghead == "进入小区低电量提醒":
                             self.set_remind_enterhome(False) 
+        
+        if (self.is_car_at_home(car_status) and self.is_car_parked(car_status)):
+            self.reset_check_interval(True)
                             
         #if self.is_car_parked(car_status) and self.is_car_at_home(car_status):
         #    self.set_remind_enterhome(False)
