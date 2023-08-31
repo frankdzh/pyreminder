@@ -78,16 +78,17 @@ class TestCarReminder(unittest.TestCase):
             'geofence': 'data.status.car_geodata.geofence',
             'plugged_in': 'data.status.charging_details.plugged_in',
             'heading': 'data.status.driving_details.heading',
+            'shift_state': 'data.status.driving_details.shift_state',
         }
         self.default_check_interval = self.car_reminder.check_interval
         test_cases = [
             #先出小区，在进小区 0-5
-            {'plugged_in': False, 'date': 1, 'hour': 11, 'battery_level': 19, 'speed': 0, 'geofence': '家', 'heading': 182, 'check_interval': -1, 'expected1': False, 'expected2': ''},
+            {'plugged_in': False, 'date': 1, 'hour': 11, 'battery_level': 19, 'speed': 20, 'shift_state': 'D', 'geofence': '家', 'heading': 178, 'check_interval': -1, 'expected1': False, 'expected2': ''},
             {'geofence': '', 'expected1': False, 'expected2': ''},
-            {'geofence': '家', 'expected1': True, 'expected2': '进入小区低电量提醒'},
-            {'geofence': '家', 'expected1': False, 'expected2': ''},
-            {'geofence': '', 'expected1': False, 'expected2': ''},
-            {'geofence': '家', 'expected1': True, 'expected2': '进入小区低电量提醒'},
+            {'geofence': '家', 'speed': 0, 'shift_state': '', 'heading': 177, 'expected1': True, 'expected2': '进入小区低电量提醒'},
+            {'geofence': '家', 'shift_state': 'D', 'expected1': False, 'expected2': ''},
+            {'geofence': '', 'shift_state': 'D', 'expected1': False, 'expected2': ''},
+            {'geofence': '家', 'shift_state': '', 'expected1': True, 'expected2': '进入小区低电量提醒'},
             #检查跨天，第一天低电量提醒过，第二天再次提醒 6-10
             {'plugged_in': False, 'date': 1, 'hour': 11, 'battery_level': 19, 'speed': 0, 'geofence': '家', 'heading': 182, 'check_interval': -1, 'expected1': False, 'expected2': ''},
             {'date': 1, 'hour': 18, 'expected1': True, 'expected2': '定期充电提醒'},
@@ -95,7 +96,7 @@ class TestCarReminder(unittest.TestCase):
             {'date': 2, 'expected1': True , 'expected2': '定期充电提醒'},
             {'date': 2, 'expected1': False, 'expected2': ''},
             # 条件不满足时，不会提醒 11-17
-            {'plugged_in': False, 'date': 1, 'hour': 11, 'battery_level': 39, 'speed': 0, 'geofence': '家', 'heading': 182, 'check_interval': -1, 'expected1': False, 'expected2': ''},
+            {'plugged_in': False, 'date': 1, 'hour': 11, 'battery_level': 39, 'speed': 0, 'shift_state': '', 'geofence': '家', 'heading': 178, 'check_interval': -1, 'expected1': False, 'expected2': ''},
             {'plugged_in': True},
             {'date': 2},
             {'hour': 15},
@@ -103,55 +104,55 @@ class TestCarReminder(unittest.TestCase):
             {'geofence': ''},
             {'heading': ''},
             # 条件满足时 18-20
-            {'plugged_in': False, 'date': 1, 'hour': 11, 'battery_level': 39, 'speed': 0, 'geofence': '', 'heading': 182, 'check_interval': -1, 'expected1': False, 'expected2': ''},
+            {'plugged_in': False, 'date': 1, 'hour': 11, 'battery_level': 39, 'speed': 0, 'shift_state': '', 'geofence': '', 'heading': 179, 'check_interval': -1, 'expected1': False, 'expected2': ''},
             {'geofence': '家', 'battery_level': 30, 'expected1': True, 'expected2': '进入小区低电量提醒'},
             {'hour': 12, 'expected1': True, 'expected2': '定期充电提醒'},
             # 检查间隔自动调整 21-31
-            {'plugged_in': False, 'date': 1, 'hour': 11, 'battery_level': 19, 'speed': 30, 'geofence': '', 'heading': 182, 'check_interval': -1, 'expected1': False, 'expected2': ''},
+            {'plugged_in': False, 'date': 1, 'hour': 11, 'battery_level': 19, 'speed': 30, 'shift_state': 'd', 'geofence': '', 'heading': 178, 'check_interval': -1, 'expected1': False, 'expected2': ''},
             {'geofence': '', 'speed': 0, 'expected1': False, 'expected2': ''},
             {'geofence': '', 'speed': 30, 'expected1': False, 'expected2': ''},
             {'geofence': '', 'geofence': '', 'expected1': False, 'expected2': ''},
             {'geofence': '家', 'expected1': False, 'expected2': ''},
             {'geofence': '家', 'expected1': False, 'expected2': ''},
             {'geofence': '家', 'expected1': False, 'expected2': ''},
-            {'geofence': '家', 'speed': 0, 'expected1': True, 'expected2': '进入小区低电量提醒'},
+            {'geofence': '家', 'speed': 0, 'shift_state': '', 'expected1': True, 'expected2': '进入小区低电量提醒'},
             {'geofence': '家', 'expected1': False, 'expected2': ''},
             {'geofence': '', 'expected1': False, 'expected2': ''},
             {'geofence': '家', 'expected1': True, 'expected2': '进入小区低电量提醒'},
             # 检查间隔自动调整 32-42
-            {'plugged_in': False, 'date': 1, 'hour': 11, 'battery_level': 19, 'speed': 0, 'geofence': '家', 'heading': 182, 'check_interval': -1, 'expected1': False, 'expected2': ''},
+            {'plugged_in': False, 'date': 1, 'hour': 11, 'battery_level': 19, 'speed': 0, 'shift_state': 'd', 'geofence': '家', 'heading': 180, 'check_interval': -1, 'expected1': False, 'expected2': ''},
             {'geofence': '家', 'speed': 30, 'expected1': False, 'expected2': ''},
             {'geofence': '', 'geofence': '', 'speed': 40, 'expected1': False, 'expected2': ''},
             {'geofence': '', 'expected1': False, 'expected2': ''},
             {'geofence': '家', 'expected1': False, 'expected2': ''},
             {'geofence': '家', 'expected1': False, 'expected2': ''},
-            {'geofence': '家', 'speed': 0, 'expected1': True, 'expected2': '进入小区低电量提醒'},
+            {'geofence': '家', 'speed': 0, 'shift_state': '', 'expected1': True, 'expected2': '进入小区低电量提醒'},
             {'geofence': '家', 'expected1': False, 'expected2': ''},
             {'geofence': '', 'speed': 50, 'expected1': False, 'expected2': ''},
             {'geofence': '', 'speed': 50, 'expected1': False, 'expected2': ''},
-            {'geofence': '家', 'speed': 0, 'expected1': True, 'expected2': '进入小区低电量提醒'},
+            {'geofence': '家', 'speed': 0, 'shift_state': '', 'expected1': True, 'expected2': '进入小区低电量提醒'},
             #定时提醒与进小区提醒是否冲突 43-48
-            {'plugged_in': False, 'date': 1, 'hour': 11, 'battery_level': 19, 'speed': 50, 'geofence': '家', 'heading': 182, 'check_interval': -1, 'expected1': False, 'expected2': ''},
+            {'plugged_in': False, 'date': 1, 'hour': 11, 'battery_level': 19, 'speed': 50, 'shift_state': 'd', 'geofence': '家', 'heading': 182, 'check_interval': -1, 'expected1': False, 'expected2': ''},
             {'geofence': '', 'expected1': False, 'expected2': ''},
             {'geofence': '家', 'expected1': False, 'expected2': ''},
             {'date': 2},
             {'date': 3, 'hour': 0, 'expected1': True, 'expected2': '定期充电提醒'},
-            {'speed': 0, 'expected1': True, 'expected2': '进入小区低电量提醒'},
+            {'speed': 0, 'shift_state': '', 'expected1': True, 'expected2': '进入小区低电量提醒'},
             #检查出小区是否取消了提醒 49~54
-            {'plugged_in': False, 'date': 1, 'hour': 11, 'battery_level': 19, 'speed': 0, 'geofence': '家', 'heading': 182, 'check_interval': -1, 'expected1': False, 'expected2': ''},
-            {'geofence': '家', 'speed': 30, 'expected1': False, 'expected2': ''},
+            {'plugged_in': False, 'date': 1, 'hour': 11, 'battery_level': 19, 'speed': 0, 'shift_state': '', 'geofence': '家', 'heading': 182, 'check_interval': -1, 'expected1': False, 'expected2': ''},
+            {'geofence': '家', 'speed': 30, 'shift_state': 'd', 'expected1': False, 'expected2': ''},
             {'geofence': '', 'geofence': '', 'speed': 40, 'expected1': False, 'expected2': ''},
             {'geofence': '', 'expected1': False, 'expected2': ''},
             {'geofence': '家', 'expected1': False, 'expected2': ''},
-            {'geofence': '家', 'speed': 0, 'expected1': True, 'expected2': '进入小区低电量提醒'},
+            {'geofence': '家', 'speed': 0, 'shift_state': '', 'expected1': True, 'expected2': '进入小区低电量提醒'},
             #在电量足够情况下，在停车了以后，不提醒，但是检查间隔也要恢复 55-58
-            {'plugged_in': False, 'date': 1, 'hour': 11, 'battery_level': 59, 'speed': 0, 'geofence': '家', 'heading': 182, 'check_interval': -1, 'expected1': False, 'expected2': ''},
-            {'geofence': '', 'speed': 30, 'expected1': False, 'expected2': ''},
+            {'plugged_in': False, 'date': 1, 'hour': 11, 'battery_level': 59, 'speed': 0, 'shift_state': '', 'geofence': '家', 'heading': 181, 'check_interval': -1, 'expected1': False, 'expected2': ''},
+            {'geofence': '', 'speed': 30, 'shift_state': 'd', 'expected1': False, 'expected2': ''},
             {'geofence': '家', 'speed': 30, 'expected1': False, 'expected2': '', 'check_interval': 1},
             {'geofence': '家', 'speed': 20, 'expected1': False, 'expected2': '', 'check_interval': 1},
             {'geofence': '家', 'speed': 10, 'expected1': False, 'expected2': '', 'check_interval': 1},
             {'geofence': '家', 'speed': 5, 'expected1': False, 'expected2': '', 'check_interval': 1},
-            {'geofence': '家', 'speed': 0, 'expected1': False, 'expected2': '', 'check_interval': self.default_check_interval},
+            {'geofence': '家', 'speed': 0, 'shift_state': '', 'expected1': False, 'expected2': '', 'check_interval': self.default_check_interval},
         ]
         
         current_case = {}
@@ -177,7 +178,7 @@ class TestCarReminder(unittest.TestCase):
                                     self.set_nested_dict_value(car_status, full_path, value)
                     
                     # ... 进行测试
-                    if i == 46:
+                    if i == 2:
                         test = True
                         #logging.warning(f'{i}...')
                     if (plugin_i == 2): #测试所有的插电的情况下，应该所有testcase不会提醒
@@ -193,6 +194,9 @@ class TestCarReminder(unittest.TestCase):
                         if (current_case['expected1'] == True):
                             self.assertEqual(msghead, current_case['expected2'])
                         
+                        if (bShouldRemind != current_case['expected1']):
+                            test = True
+                        
                         if (self.assert_check_interval > 0):
                             self.assertEqual(self.assert_check_interval ,self.car_reminder.check_interval)
 
@@ -202,7 +206,7 @@ class TestCarReminder(unittest.TestCase):
                         else:
                             print("+", end="")
                     except AssertionError:
-                        logging.debug(f"\r\nTest case loop:{plugin_i}[{i}#] failed: result1={bShouldRemind}, result2={msghead}, testcase= {current_case}")
+                        logging.error(f"\r\nTest case loop:{plugin_i}[{i}#] failed: result1={bShouldRemind}, result2={msghead}, testcase= {current_case}")
                         raise  # 重新抛出断言错误，以便测试结果能反映这个失败            
             print()
             logging.debug(f"test loop {plugin_i} End")

@@ -60,9 +60,12 @@ class CarReminder:
 
     def reset_check_interval(self, bSet):
         if bSet: #恢复间隔
-            self.check_interval = int(os.getenv("CHECK_INTERVAL", 60))
+            default_check_interval = int(os.getenv("CHECK_INTERVAL", 60))
+            if self.check_interval == default_check_interval:
+                return
+            self.check_interval = default_check_interval
             logging.info(f"{self.get_timestamp()}: 恢复正常，检测间隔={self.check_interval}")
-        else:                
+        else:
             self.check_interval = 1
             logging.info(f"{self.get_timestamp()}: 进小区了，加快检测，检测间隔={self.check_interval}")
 
@@ -157,8 +160,10 @@ class CarReminder:
         判断车辆是否停好了
         """
         speed0 = car_status["data"]["status"]["driving_details"]["speed"] == 0
-        bParkHead = car_status["data"]["status"]["driving_details"]["heading"] == 182 #todo:头朝里也要判断
-        return speed0 and bParkHead
+        heading = car_status["data"]["status"]["driving_details"]["heading"]
+        bParkHead = heading <= 182 + 10 and heading >= 182 - 10  #todo:头朝里也要判断
+        shift_state_parked = car_status["data"]["status"]["driving_details"]["shift_state"] == ""
+        return speed0 and bParkHead and shift_state_parked
 
     def is_car_charging(self, car_status):
         """
@@ -180,7 +185,10 @@ class CarReminder:
         current_speed = car_status["data"]["status"]["driving_details"]["speed"]
         current_cargeo = car_status["data"]["status"]["car_geodata"]['geofence']
         logging.info(
-            f"{self.get_timestamp()}: 检查-> 当前电量:{current_battery}% <= 报警电量:{self.battery_level_limit}%, 当前速度:{current_speed} <= 报警速度:{self.speed_limit}, 当前位置:{current_cargeo} == 报警位置:{self.car_geofence_limit}...")
+            f"{self.get_timestamp()}: 检查-> 当前电量:{current_battery}% <= 报警电量:{self.battery_level_limit}%, "
+            f"当前速度:{current_speed} <= 报警速度:{self.speed_limit}, 当前位置:{current_cargeo} == 报警位置:{self.car_geofence_limit}"
+            f", 检测间隔:{self.check_interval}"
+            f"...")
     
     def print_log(self, car_status):
         current_time = time.time()
@@ -225,16 +233,12 @@ class CarReminder:
                     if bShouldRemind:
                         current_battery = car_status["data"]["status"]["battery_details"]["battery_level"]
                         msg = f"{msghead}，当前电量：{current_battery}% <= 报警电量: {self.battery_level_limit}%"
-                        self.send_pushover_message(msg)
-                        #进入小区提醒至少提醒一次，除非没提醒就再次出小区了
-                        if msghead == "进入小区低电量提醒":
-                            self.set_remind_enterhome(False) 
+                        self.send_pushover_message(msg)                        
         
-        if (self.is_car_at_home(car_status) and self.is_car_parked(car_status)):
+        #发现在家里挺好车位了，说明该发消息肯定发过了，不需要再频繁检测了
+        if self.is_car_at_home(car_status) and self.is_car_parked(car_status):
             self.reset_check_interval(True)
                             
-        #if self.is_car_parked(car_status) and self.is_car_at_home(car_status):
-        #    self.set_remind_enterhome(False)
         return bShouldRemind, msghead        
 
     def run(self):
