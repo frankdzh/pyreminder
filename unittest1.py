@@ -145,7 +145,7 @@ class TestCarReminder(unittest.TestCase):
             {'geofence': '', 'expected1': False, 'expected2': ''},
             {'geofence': '家', 'expected1': False, 'expected2': ''},
             {'geofence': '家', 'speed': 0, 'shift_state': '', 'expected1': True, 'expected2': '进入小区低电量提醒'},
-            #在电量足够情况下，在停车了以后，不提醒，但是检查间隔也要恢复 55-58
+            #在电量足够情况下，在停车了以后，不提醒，但是检查间隔也要恢复 55-61
             {'plugged_in': False, 'date': 1, 'hour': 11, 'battery_level': 59, 'speed': 0, 'shift_state': '', 'geofence': '家', 'heading': 181, 'check_interval': -1, 'expected1': False, 'expected2': ''},
             {'geofence': '', 'speed': 30, 'shift_state': 'd', 'expected1': False, 'expected2': ''},
             {'geofence': '家', 'speed': 30, 'expected1': False, 'expected2': '', 'check_interval': 1},
@@ -153,6 +153,12 @@ class TestCarReminder(unittest.TestCase):
             {'geofence': '家', 'speed': 10, 'expected1': False, 'expected2': '', 'check_interval': 1},
             {'geofence': '家', 'speed': 5, 'expected1': False, 'expected2': '', 'check_interval': 1},
             {'geofence': '家', 'speed': 0, 'shift_state': '', 'expected1': False, 'expected2': '', 'check_interval': self.default_check_interval},
+            #重现问题:从外面回来停车后，没有立即发送消息 62-
+            {'plugged_in': False, 'date': 1, 'hour': 11, 'battery_level': 59, 'speed': 50, 'shift_state': 'd', 'geofence': '', 'heading': 11, 'check_interval': -1, 'expected1': False, 'expected2': ''},
+            {'geofence': '家', 'speed': 19, 'battery_level': 35, 'expected1': False, 'expected2': '', 'check_interval': 1},
+            {'speed': 6, 'expected1': False, 'expected2': '', 'check_interval': 1},
+            {'speed': 3, 'expected1': False, 'expected2': '', 'check_interval': 1},            
+            {'speed': 0, 'shift_state': '', 'heading': 180, 'expected1': True, 'expected2': '进入小区低电量提醒', 'check_interval': self.default_check_interval}, #66
         ]
         
         current_case = {}
@@ -178,7 +184,7 @@ class TestCarReminder(unittest.TestCase):
                                     self.set_nested_dict_value(car_status, full_path, value)
                     
                     # ... 进行测试
-                    if i == 2:
+                    if i == 66:
                         test = True
                         #logging.warning(f'{i}...')
                     if (plugin_i == 2): #测试所有的插电的情况下，应该所有testcase不会提醒

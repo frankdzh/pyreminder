@@ -164,7 +164,8 @@ class CarReminder:
         speed0 = car_status["data"]["status"]["driving_details"]["speed"] == 0
         heading = car_status["data"]["status"]["driving_details"]["heading"]
         bParkHead = heading <= 182 + 10 and heading >= 182 - 10  #todo:头朝里也要判断
-        shift_state_parked = car_status["data"]["status"]["driving_details"]["shift_state"] == ""
+        shift_state = car_status["data"]["status"]["driving_details"]["shift_state"]
+        shift_state_parked = shift_state == "" or shift_state == "P"
         return speed0 and bParkHead and shift_state_parked
 
     def is_car_charging(self, car_status):
@@ -175,7 +176,7 @@ class CarReminder:
 
     def is_car_low_battery_level(self, car_status):
         battery_level = car_status["data"]["status"]["battery_details"]["battery_level"]
-        return battery_level < self.battery_level_limit
+        return battery_level <= self.battery_level_limit
     
     def get_timestamp(self):
         now = datetime.datetime.now()
@@ -237,7 +238,7 @@ class CarReminder:
                     if bShouldRemind:
                         current_battery = car_status["data"]["status"]["battery_details"]["battery_level"]
                         msg = f"{msghead}，当前电量：{current_battery}% <= 报警电量: {self.battery_level_limit}%"
-                        self.send_pushover_message(msg)                        
+                        self.send_pushover_message(msg)
         
         #发现在家里停好车位了，说明该发消息肯定发过了，不需要再频繁检测了
         if self.is_car_at_home(car_status) and self.is_car_parked(car_status):
