@@ -31,6 +31,8 @@ class CarReminder:
         
         #self.last_reminded_time = None  # To track the last time a reminder was sent        
         self.remind_time_done = []
+        
+        self.remind_enterhome = False
 
         # Initialize previous states for boundary checks
         self.prev_state = {
@@ -184,9 +186,11 @@ class CarReminder:
         current_battery = car_status["data"]["status"]["battery_details"]["battery_level"]
         current_speed = car_status["data"]["status"]["driving_details"]["speed"]
         current_cargeo = car_status["data"]["status"]["car_geodata"]['geofence']
+        current_shift_state = car_status["data"]["status"]["driving_details"]["shift_state"]
         logging.info(
             f"{self.get_timestamp()}: 检查-> 当前电量:{current_battery}% <= 报警电量:{self.battery_level_limit}%, "
             f"当前速度:{current_speed} <= 报警速度:{self.speed_limit}, 当前位置:{current_cargeo} == 报警位置:{self.car_geofence_limit}"
+            f", 挡位:'{current_shift_state}'"
             f", 检测间隔:{self.check_interval}"
             f"...")
     
@@ -235,7 +239,7 @@ class CarReminder:
                         msg = f"{msghead}，当前电量：{current_battery}% <= 报警电量: {self.battery_level_limit}%"
                         self.send_pushover_message(msg)                        
         
-        #发现在家里挺好车位了，说明该发消息肯定发过了，不需要再频繁检测了
+        #发现在家里停好车位了，说明该发消息肯定发过了，不需要再频繁检测了
         if self.is_car_at_home(car_status) and self.is_car_parked(car_status):
             self.reset_check_interval(True)
                             
