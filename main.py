@@ -69,7 +69,6 @@ class CarReminder:
             logging.info(f"{self.get_timestamp()}: 恢复正常，检测间隔={self.check_interval}")
         else:
             self.check_interval = 1
-            logging.info(f"{self.get_timestamp()}: 进小区了，加快检测，检测间隔={self.check_interval}")
 
     def set_remind_enterhome(self, bSet):
         self.remind_enterhome = bSet
@@ -87,10 +86,12 @@ class CarReminder:
             # 到家，进小区
             if current_position == self.car_geofence_limit:                
                 self.set_remind_enterhome(True)
+                logging.info(f"{self.get_timestamp()}: 进小区了，加快检测，检测间隔={self.check_interval}")
                 bRet = True
             else: # 出小区                
                 bret = False
                 self.set_remind_enterhome(False)
+                logging.info(f"{self.get_timestamp()}: 出小区了，检测间隔={self.check_interval}")
                 
         self.prev_state['car_position'] = current_position
         return bret
@@ -214,7 +215,7 @@ class CarReminder:
         """
         # 每次当车辆首次进入家的地理范围时，需要停车时提醒
         if self.remind_enterhome and self.is_car_parked(car_status):
-            self.set_remind_enterhome(False) #提醒过了，就不用再提醒
+            self.set_remind_enterhome(False) #提醒过了，就不用再提醒,这里要独立提醒，不能定期提醒这里不提醒了
             return True, "进入小区低电量提醒"
 
         # 根据配置定期提醒
@@ -240,11 +241,11 @@ class CarReminder:
                         msg = f"{msghead}，当前电量：{current_battery}% <= 报警电量: {self.battery_level_limit}%"
                         self.send_pushover_message(msg)
         
-        #发现在家里停好车位了，说明该发消息肯定发过了，不需要再频繁检测了
+        #发现在家里停好车位了，如果没有触发提醒，也该恢复正常检测间隔了
         if self.is_car_at_home(car_status) and self.is_car_parked(car_status):
             self.reset_check_interval(True)
                             
-        return bShouldRemind, msghead        
+        return bShouldRemind, msghead
 
     def run(self):
         """

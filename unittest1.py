@@ -184,7 +184,7 @@ class TestCarReminder(unittest.TestCase):
                                     self.set_nested_dict_value(car_status, full_path, value)
                     
                     # ... 进行测试
-                    if i == 66:
+                    if i == 45:
                         test = True
                         #logging.warning(f'{i}...')
                     if (plugin_i == 2): #测试所有的插电的情况下，应该所有testcase不会提醒
@@ -195,6 +195,11 @@ class TestCarReminder(unittest.TestCase):
                     self.car_reminder.check_date_crossing(self.current_date)
                     self.car_reminder.check_car_enterhome(car_status["data"]["status"]["car_geodata"]['geofence'])
                     bShouldRemind, msghead = self.car_reminder.remind_to_charge_if_needed(car_status)
+                    
+                    #发现在家里停好车位了，如果没有触发提醒，也该恢复正常检测间隔了
+                    if self.car_reminder.is_car_at_home(car_status) and self.car_reminder.is_car_parked(car_status):
+                        self.car_reminder.reset_check_interval(True)
+
                     try:
                         self.assertEqual(bShouldRemind, current_case['expected1'])
                         if (current_case['expected1'] == True):
