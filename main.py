@@ -77,21 +77,24 @@ class CarReminder:
     # Method to check if car's position has entered 'Home'
     def check_car_enterhome(self, current_position):
         bret = False
-        if (self.prev_state['car_position'] == None):
+        prev_state = self.prev_state['car_position']
+        if (prev_state == None):
             self.prev_state['car_position'] = current_position
 
         #只在进、出小区时触发一次
-        if self.prev_state['car_position'] != current_position:
+        if prev_state != current_position:
             # Initialize your variables here
             # 到家，进小区
             if current_position == self.car_geofence_limit:                
                 self.set_remind_enterhome(True)
                 logging.info(f"{self.get_timestamp()}: 进小区了，加快检测，检测间隔={self.check_interval}")
                 bRet = True
-            else: # 出小区                
+            elif prev_state == self.car_geofence_limit: # 出小区
                 bret = False
                 self.set_remind_enterhome(False)
-                logging.info(f"{self.get_timestamp()}: 出小区了，检测间隔={self.check_interval}")
+                logging.info(f"{self.get_timestamp()}: 出小区了，恢复检测间隔={self.check_interval}")
+            else:
+                bret = False; #在外面切换了地址，不应该做任何处理
                 
         self.prev_state['car_position'] = current_position
         return bret
