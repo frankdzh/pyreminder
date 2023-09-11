@@ -134,9 +134,9 @@ class CarReminder:
             # if response.status_code == 200:
 
             #print(f"Sent message to {group}, status: {response.status_code}")
-            logging.info(f"{self.get_timestamp()}:发送消息 '{message}', status: {response.status_code}")
+            logging.info(f"{self.get_timestamp()}: 发送消息 '{message}', status: {response.status_code}")
         else:
-            logging.info(f"{self.get_timestamp()}:禁用了发送消息 '{message}'")
+            logging.info(f"{self.get_timestamp()}: 禁用了发送消息 '{message}'")
 
     def get_car_status(self):
         """
