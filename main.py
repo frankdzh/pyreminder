@@ -67,8 +67,11 @@ class CarReminder:
                 return
             self.check_interval = default_check_interval
             logging.info(f"{self.get_timestamp()}: 恢复正常，检测间隔={self.check_interval}")
+            self.log_interval = int(os.getenv("LOG_INTERVAL", 60))
         else:
             self.check_interval = 1
+            self.log_interval = 1
+            
 
     def set_remind_enterhome(self, bSet):
         self.remind_enterhome = bSet
